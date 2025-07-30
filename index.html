@@ -1,53 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dog Location</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    /* Make sure the body and html take up full height */
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Make the map fill the entire screen */
-    #map {
-      height: 100%;
-      width: 100%;
-    }
+    html, body { height: 100%; margin: 0; padding: 0; }
+    #map { height: 100%; width: 100%; }
   </style>
 </head>
-
 <body>
-
-  <!-- Map container -->
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // Create map centered on a placeholder location (Wellington, NZ)
-    const map = L.map('map').setView([-41.2865, 174.7762], 15);
+    const firebaseUrl = 'https://dts-electronics-default-rtdb.asia-southeast1.firebasedatabase.app/dog_location.json';
 
-    // Add OpenStreetMap tiles
+    const map = L.map('map').setView([-41.2865, 174.7762], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Add a marker at the same position
-    const marker = L.marker([-41.2865, 174.7762]).addTo(map)
-      .bindPopup('Dog is here!')
-      .openPopup();
-  </script>
+    const marker = L.marker([-41.2865, 174.7762]).addTo(map).bindPopup("Dog is here!");
 
+    function updateLocation() {
+      fetch(firebaseUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.latitude && data.longitude) {
+            const lat = data.latitude;
+            const lng = data.longitude;
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng]);
+            marker.getPopup().setContent(`Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`);
+          }
+        })
+        .catch(err => console.error("Failed to fetch location:", err));
+    }
+
+    // Update location every 5 seconds
+    updateLocation();
+    setInterval(updateLocation, 5000);
+  </script>
 </body>
 </html>
